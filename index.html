@@ -2,8 +2,13 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>CARPENTER'S FORGE</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CARPENTER'S FORGE — 大工の現場日本語 × 技能RPG</title>
+<meta name="description" content="外国人技能実習生・特定技能者向けの大工学習ゲーム。現場日本語・工具・木割計算・図面記号・資格対策をRPG形式で学べる。">
+<meta property="og:title" content="CARPENTER'S FORGE">
+<meta property="og:description" content="大工の現場日本語 × 技能RPG — クイズバトル・スラング辞典・資格道場で現場力を鍛えろ。">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#120D08">
 <style>
 :root {
   --hinoki: #C8A96E;
@@ -483,6 +488,13 @@ body { display:flex; flex-direction:column; }
 .dw-step-card.correct-pos { border-color:var(--midori); background:rgba(61,122,74,0.15); }
 .dw-step-card.wrong-pos { border-color:var(--aka); background:rgba(192,57,43,0.1); }
 .dw-drag-icon { font-size:18px; color:var(--hai); }
+.dw-move-btns { margin-left:auto; display:flex; flex-direction:column; gap:4px; }
+.dw-move-btn {
+  background:var(--tan3); border:1px solid var(--hai); border-radius:3px;
+  color:var(--shiro); font-size:11px; padding:3px 8px; cursor:pointer;
+}
+.dw-move-btn:disabled { opacity:0.25; cursor:default; }
+.dw-move-btn:not(:disabled):active { background:var(--hinoki); color:var(--kuro); }
 .dw-step-num {
   font-family:var(--font-display); font-size:20px; color:var(--hinoki);
   font-weight:700; min-width:28px;
@@ -732,10 +744,10 @@ rt { font-size: 0.55em; color: var(--hinoki); letter-spacing: 0.05em; }
     <h1>CARPENTER'S<br><span>FORGE</span></h1>
     <p class="hero-sub">// 大工の現場日本語 × 技能 RPG</p>
     <div class="stat-row">
-      <div class="stat-item"><div class="stat-num">8</div><div class="stat-label">STAGES</div></div>
+      <div class="stat-item"><div class="stat-num" id="stat-stages">8</div><div class="stat-label">STAGES</div></div>
       <div class="stat-item"><div class="stat-num">5</div><div class="stat-label">GAMES</div></div>
-      <div class="stat-item"><div class="stat-num">50+</div><div class="stat-label">SLANG</div></div>
-      <div class="stat-item"><div class="stat-num">5</div><div class="stat-label">資格道場</div></div>
+      <div class="stat-item"><div class="stat-num" id="stat-slang">30+</div><div class="stat-label">SLANG</div></div>
+      <div class="stat-item"><div class="stat-num" id="stat-shikaku">5</div><div class="stat-label">資格道場</div></div>
     </div>
   </div>
 
@@ -885,8 +897,8 @@ rt { font-size: 0.55em; color: var(--hinoki); letter-spacing: 0.05em; }
     <span class="icon">📖</span>
     <p id="ss-unlock-text">スラングをアンロック！</p>
   </div>
-  <div style="padding:0 16px 16px; display:none;" id="ss-next-wrap">
-    <button class="btn-primary" onclick="ssNext()">次へ →</button>
+  <div style="padding:0 16px 16px; display:none; position:sticky; bottom:70px; z-index:50;" id="ss-next-wrap">
+    <button class="btn-primary" style="box-shadow:0 4px 16px rgba(200,169,110,0.4);" onclick="ssNext()">次へ →</button>
   </div>
   <div id="ss-result" style="display:none;">
     <div class="result-screen">
@@ -947,6 +959,7 @@ rt { font-size: 0.55em; color: var(--hinoki); letter-spacing: 0.05em; }
     <div class="result-screen">
       <div class="big-num" id="kw-final-score">0</div>
       <p>スコア</p>
+      <p id="kw-best" style="color:var(--hinoki);"></p>
       <button class="btn-primary" onclick="kwRestart()">もう一度</button>
     </div>
   </div>
@@ -966,8 +979,8 @@ rt { font-size: 0.55em; color: var(--hinoki); letter-spacing: 0.05em; }
     <div class="dw-steps" id="dw-steps"></div>
     <button class="dw-check-btn" onclick="dwCheck()">✓ 順番を確認する</button>
     <div class="dw-feedback" id="dw-feedback"></div>
-    <div style="padding:0 16px 16px; display:none;" id="dw-next-wrap">
-      <button class="btn-secondary" onclick="dwBackToSelect()">ステージ選択へ</button>
+    <div style="padding:0 16px 16px; display:none; position:sticky; bottom:70px; z-index:50;" id="dw-next-wrap">
+      <button class="btn-primary" onclick="dwBackToSelect()">✓ クリア！ステージ選択へ</button>
     </div>
   </div>
 </div>
@@ -1095,6 +1108,28 @@ rt { font-size: 0.55em; color: var(--hinoki); letter-spacing: 0.05em; }
 </div>
 
 <script>
+// ════ PROGRESS (localStorage) ════
+const SAVE_KEY = 'carpenters-forge-progress';
+function loadProgress() {
+  try { return JSON.parse(localStorage.getItem(SAVE_KEY)) || {}; }
+  catch(e) { return {}; }
+}
+function saveProgress(patch) {
+  try {
+    const p = Object.assign(loadProgress(), patch);
+    localStorage.setItem(SAVE_KEY, JSON.stringify(p));
+  } catch(e) {}
+}
+function markCleared(kind, id) {
+  const p = loadProgress();
+  const set = p[kind] || {};
+  set[id] = true;
+  saveProgress({ [kind]: set });
+}
+function isCleared(kind, id) {
+  return !!((loadProgress()[kind] || {})[id]);
+}
+
 // ════ PAGE NAVIGATION ════
 const pages = ['home','quiz','slang','kiwari','workshop','blueprint','dict','career','shikaku'];
 function showPage(id) {
@@ -1156,6 +1191,7 @@ function setLang(lang) {
   document.getElementById('btn-ja').classList.toggle('active', lang==='ja');
   document.getElementById('btn-en').classList.toggle('active', lang==='en');
   initStages();
+  initShikaku();
 }
 
 function getQ(q) {
@@ -1723,7 +1759,7 @@ function initShikaku() {
         <h3>${currentLang==='en' ? exam.name_en : exam.name}</h3>
         <p>${exam.desc} / ${exam.questions.length}問</p>
       </div>
-      <span class="stage-clear">▶</span>
+      <span class="stage-clear">${isCleared('shikaku', exam.id) ? '✅' : '▶'}</span>
     `;
     btn.onclick = () => skStart(exam.id);
     list.appendChild(btn);
@@ -1831,6 +1867,7 @@ function skEnd(pass) {
   document.getElementById('shikaku-result').style.display='block';
   const pct = skScore/skQuestions.length;
   const passed = pct >= 0.6;
+  if (passed) { markCleared('shikaku', skExamId); initShikaku(); }
   document.getElementById('sk-end-icon').textContent = passed?'🎓':'📚';
   document.getElementById('sk-end-title').textContent = passed?'合格ライン達成！':'もう一度挑戦！';
   document.getElementById('sk-end-title').className = 'battle-end-title '+(passed?'win':'lose');
@@ -1864,7 +1901,7 @@ function initStages() {
         <h3>${name}</h3>
         <p>${desc}</p>
       </div>
-      <span class="stage-clear">${QUESTIONS[s.id] ? '▶' : '🔒'}</span>
+      <span class="stage-clear">${isCleared('quiz', s.id) ? '✅' : (QUESTIONS[s.id] ? '▶' : '🔒')}</span>
     `;
     btn.onclick = () => startStage(s.id);
     container.appendChild(btn);
@@ -1946,7 +1983,7 @@ function selectBattleAnswer(i, correctIdx, tip) {
   if (answered) return;
   answered = true;
 
-  const btns = document.querySelectorAll('.battle-cmd');
+  const btns = document.querySelectorAll('#b-cmd-win .battle-cmd');
   btns[correctIdx].classList.add('correct');
 
   if (i === correctIdx) {
@@ -2012,6 +2049,8 @@ function showBattleResult(win) {
   document.getElementById('quiz-battle').style.display = 'none';
   document.getElementById('quiz-result').style.display = 'block';
   if (win) {
+    markCleared('quiz', currentStage);
+    initStages();
     document.getElementById('end-icon').textContent = '🏆';
     document.getElementById('end-title').textContent = currentLang==='en' ? 'VICTORY!' : 'VICTORY!';
     document.getElementById('end-title').className = 'battle-end-title win';
@@ -2030,9 +2069,6 @@ function showBattleResult(win) {
     setTimeout(() => { document.getElementById('end-exp').style.width=(quizScore/shuffledQuestions.length*100)+'%'; }, 600);
   }
 }
-
-function showQuizResult() { showBattleResult(quizHP>0); }
-function nextQuestion() { battleNext(); }
 
 function backToStages() {
   document.getElementById('quiz-stage-select').style.display = 'block';
@@ -2055,23 +2091,25 @@ const SS_DATA = [
 ];
 
 let ssIndex=0, ssScore=0, ssCombo=0, ssAnswered=false;
+let ssShuffled=[], ssCorrectIdx=0;
 
 function ssInit() {
   ssIndex=0; ssScore=0; ssCombo=0; ssAnswered=false;
+  ssShuffled=shuffleArray(SS_DATA);
   document.getElementById('ss-result').style.display='none';
-  document.getElementById('ss-q-total').textContent=SS_DATA.length;
+  document.getElementById('ss-q-total').textContent=ssShuffled.length;
   ssRender();
 }
 
 function ssRender() {
-  if (ssIndex >= SS_DATA.length) {
+  if (ssIndex >= ssShuffled.length) {
     document.getElementById('ss-result').style.display='block';
     document.getElementById('ss-final').textContent=ssScore;
     document.getElementById('ss-scenario').style.display='none';
     document.getElementById('ss-choices').style.display='none';
     return;
   }
-  const d = SS_DATA[ssIndex];
+  const d = ssShuffled[ssIndex];
   ssAnswered = false;
   document.getElementById('ss-q-num').textContent = ssIndex+1;
   document.getElementById('ss-score').textContent = ssScore;
@@ -2085,11 +2123,14 @@ function ssRender() {
   const choicesEl = document.getElementById('ss-choices');
   choicesEl.style.display='flex';
   choicesEl.innerHTML='';
-  d.choices.forEach((c,i) => {
+  // 選択肢の並びもシャッフル
+  const idx = shuffleArray([0,1,2,3]);
+  ssCorrectIdx = idx.indexOf(d.a);
+  idx.forEach((origIdx, dispIdx) => {
     const btn = document.createElement('button');
     btn.className='ss-choice';
-    btn.textContent=`${['A','B','C','D'][i]}. ${c}`;
-    btn.onclick=()=>ssAnswer(i);
+    btn.textContent=`${['A','B','C','D'][dispIdx]}. ${d.choices[origIdx]}`;
+    btn.onclick=()=>ssAnswer(dispIdx);
     choicesEl.appendChild(btn);
   });
   document.getElementById('ss-unlock').classList.remove('show');
@@ -2099,17 +2140,19 @@ function ssRender() {
 function ssAnswer(i) {
   if (ssAnswered) return;
   ssAnswered = true;
-  const d = SS_DATA[ssIndex];
+  const d = ssShuffled[ssIndex];
   const btns = document.querySelectorAll('.ss-choice');
-  btns[d.a].classList.add('correct');
-  if (i===d.a) { ssScore++; ssCombo++; }
+  btns[ssCorrectIdx].classList.add('correct');
+  if (i===ssCorrectIdx) { ssScore++; ssCombo++; }
   else { btns[i].classList.add('wrong'); ssCombo=0; }
   document.getElementById('ss-score').textContent=ssScore;
   document.getElementById('ss-combo').textContent=ssCombo;
   const unlock=document.getElementById('ss-unlock');
   unlock.classList.add('show');
   document.getElementById('ss-unlock-text').textContent='📖 '+d.unlock;
-  document.getElementById('ss-next-wrap').style.display='block';
+  const nextWrap=document.getElementById('ss-next-wrap');
+  nextWrap.style.display='block';
+  setTimeout(()=>nextWrap.scrollIntoView({behavior:'smooth',block:'center'}),200);
 }
 
 function ssNext() {
@@ -2118,11 +2161,9 @@ function ssNext() {
 }
 
 function ssRestart() {
-  ssIndex=0; ssScore=0; ssCombo=0;
-  document.getElementById('ss-result').style.display='none';
   document.getElementById('ss-scenario').style.display='block';
   document.getElementById('ss-choices').style.display='flex';
-  ssRender();
+  ssInit();
 }
 
 // ════ KI-WARI MASTER ════
@@ -2181,29 +2222,37 @@ function kwNextProblem() {
   document.getElementById('kw-combo').textContent=kwCombo;
 }
 
+let kwChecking = false;
 function kwCheck() {
+  if (kwChecking) return;
   const val = parseFloat(document.getElementById('kw-input').value);
   if (isNaN(val)) return;
+  kwChecking = true;
   const res = document.getElementById('kw-result');
   res.classList.add('show');
   if (Math.abs(val - kwCurrent.ans) <= kwCurrent.tol) {
     res.className='kw-result show ok';
     res.textContent=`✅ 正解！ ${kwCurrent.ans}${kwCurrent.unit}`;
     kwScore+=10+(kwCombo*2); kwCombo++;
-    setTimeout(kwNextProblem,800);
+    setTimeout(()=>{ kwChecking=false; kwNextProblem(); },800);
   } else {
     res.className='kw-result show ng';
     res.textContent=`❌ 不正解。正解は ${kwCurrent.ans}${kwCurrent.unit}`;
     kwCombo=0;
-    setTimeout(kwNextProblem,1200);
+    setTimeout(()=>{ kwChecking=false; kwNextProblem(); },1200);
   }
 }
 
 function kwEnd() {
   clearInterval(kwInterval);
+  kwChecking = false;
   document.getElementById('kw-game-screen').style.display='none';
   document.getElementById('kw-result-screen').style.display='block';
   document.getElementById('kw-final-score').textContent=kwScore;
+  const bestKey = 'kwBest_'+kwMode;
+  const best = Math.max(kwScore, loadProgress()[bestKey] || 0);
+  saveProgress({ [bestKey]: best });
+  document.getElementById('kw-best').textContent = 'ベストスコア: '+best;
 }
 
 function kwRestart() {
@@ -2296,15 +2345,28 @@ function dwRender() {
       <span class="dw-drag-icon">⠿</span>
       <span class="dw-step-num">${pos+1}</span>
       <span class="dw-step-text">${s.steps[stepIdx]}</span>
+      <span class="dw-move-btns">
+        <button class="dw-move-btn" ${pos===0?'disabled':''} aria-label="上へ">▲</button>
+        <button class="dw-move-btn" ${pos===dwOrder.length-1?'disabled':''} aria-label="下へ">▼</button>
+      </span>
     `;
     card.addEventListener('dragstart',dwDragStart);
     card.addEventListener('dragover',dwDragOver);
     card.addEventListener('drop',dwDrop);
     card.addEventListener('dragend',dwDragEnd);
+    // タッチ端末向け: ▲▼ボタンで並べ替え（HTML5 drag&dropはモバイル非対応）
+    const [upBtn, downBtn] = card.querySelectorAll('.dw-move-btn');
+    upBtn.onclick = e => { e.stopPropagation(); dwSwap(pos, pos-1); };
+    downBtn.onclick = e => { e.stopPropagation(); dwSwap(pos, pos+1); };
     container.appendChild(card);
   });
 }
 
+function dwSwap(a,b){
+  if(b<0||b>=dwOrder.length) return;
+  [dwOrder[a],dwOrder[b]]=[dwOrder[b],dwOrder[a]];
+  dwRender();
+}
 function dwDragStart(e){ dwDragging=this; this.classList.add('dragging'); }
 function dwDragOver(e){ e.preventDefault(); }
 function dwDrop(e){
@@ -2458,6 +2520,14 @@ const DICT_DATA = [
   {ja:'仕口',rom:'shiguchi',en:'Connecting joint',cat:'継手',desc:'木材をT字・L字など角度をつけて組み合わせる接合部の総称。継手との違いに注意。',ex:'「柱と梁の仕口をきれいに仕上げろ」'},
   {ja:'GL（地盤面）',rom:'jī eru',en:'Ground Level',cat:'図面',desc:'地面・地盤の高さを示す基準レベル。建物の高さはGLからの距離で表す。',ex:'「GL+500の位置に土台を設ける」'},
   {ja:'FL（床面）',rom:'efu eru',en:'Floor Level',cat:'図面',desc:'各階の床面の高さを示す基準レベル。施工の基準となる重要な指標。',ex:'「FL+2400が天井高だ」'},
+  {ja:'手元（てもと）',rom:'temoto',en:'Assistant / Helper',cat:'労務',desc:'職人の補助をする作業員のこと。材料運び・道具渡し・後片付けなどを担当。新人はまず手元から始まる。',ex:'「今日は手元についてくれ」→ 補助役をやってくれ'},
+  {ja:'段取り',rom:'dandori',en:'Preparation / Planning',cat:'作業',desc:'作業前の準備・計画のこと。「段取り八分、仕事二分」は職人の代表的な格言。',ex:'「明日の段取りしてから帰れ」'},
+  {ja:'一服（いっぷく）',rom:'ippuku',en:'Break / Rest',cat:'スラング',desc:'休憩のこと。現場では10時・15時の休憩を「一服」と呼ぶ。元はタバコ休憩の意味。',ex:'「そろそろ一服にすっか」→ 休憩にしよう'},
+  {ja:'逃げ（にげ）',rom:'nige',en:'Allowance / Margin',cat:'技術',desc:'施工誤差や変形を吸収するために設ける余裕寸法。「逃げを取る」は余裕を確保すること。',ex:'「5mm逃げを取っておけ」'},
+  {ja:'番線（ばんせん）',rom:'bansen',en:'Tie wire',cat:'部品',desc:'足場や資材の結束に使うなまし鉄線。太さは番手（#8・#10など）で呼ぶ。',ex:'「番線でしっかり縛っとけ」'},
+  {ja:'朝一（あさいち）',rom:'asaichi',en:'First thing in the morning',cat:'スラング',desc:'朝一番・作業開始直後のこと。時間指定の定番表現。',ex:'「朝一で材料搬入するぞ」'},
+  {ja:'手間（てま）',rom:'tema',en:'Labor / Daily wage',cat:'労務',desc:'作業にかかる労力・時間のこと。職人の日当は「手間賃」。「手間がかかる」は時間・労力が必要の意。',ex:'「この仕事は手間がかかる」'},
+  {ja:'面（めん）を取る',rom:'men wo toru',en:'Chamfer',cat:'技術',desc:'材料の角を斜めや丸く削る加工（面取り）。角の割れ・欠け防止と安全・美観のため。',ex:'「角の面を取っておいて」'},
 ];
 
 let dictCat='全て', dictSearch='';
@@ -2483,11 +2553,6 @@ function initDict() {
     });
   });
 
-  renderDict();
-}
-
-function filterDict() {
-  dictSearch=document.getElementById('dict-search-input').value;
   renderDict();
 }
 
@@ -2608,6 +2673,14 @@ function initCareer() {
 
 // ════ INIT ════
 window.addEventListener('DOMContentLoaded', ()=>{
+  // KI-WARI: Enterキーで回答
+  document.getElementById('kw-input').addEventListener('keydown', e=>{
+    if (e.key==='Enter') { e.preventDefault(); kwCheck(); }
+  });
+  // HOMEの統計を実データと同期
+  document.getElementById('stat-stages').textContent = STAGES.length;
+  document.getElementById('stat-slang').textContent = DICT_DATA.length + '+';
+  document.getElementById('stat-shikaku').textContent = SHIKAKU_EXAMS.length;
   initStages();
   ssInit();
   initDWStages();
