@@ -1,23 +1,22 @@
-# ⚒ CARPENTER'S FORGE
+# 🪝 TAMAKAKE'S FORGE
 
-大工の現場日本語 × 技能RPG — 外国人技能実習生・特定技能者のための大工学習ゲーム
+玉掛けの現場日本語 × 技能RPG — 外国人技能実習生・特定技能者のための玉掛け学習ゲーム
 
-A gamified learning app for foreign carpentry trainees in Japan: site Japanese, tools, joinery, blueprint symbols, and certification prep — all in RPG battle style.
+A gamified learning app for foreign rigging/slinging workers in Japan: site Japanese, rigging gear, crane signals, load calculations, and certification prep — all in RPG battle style.
 
 ## 🎮 コンテンツ
 
-- **クイズバトル** — 8ステージのDQ風バトル形式クイズ(現場日本語・工具・木材・墨付け・継手・スラング・安全法規・技能検定)
-- **SLANG SHOWDOWN** — 文脈から棟梁の言葉を読み解く実戦スラングクイズ
-- **KI-WARI MASTER** — 尺貫法・勾配・材積の制限時間計算チャレンジ
-- **DAIKU'S WORKSHOP** — 作業手順の並べ替えパズル(ドラッグ&タッチ対応)
-- **BLUEPRINT BATTLE** — 図面記号の即答クイズ
-- **スラング辞典** — 40語の現場用語をカテゴリ・検索で引ける
-- **キャリアMAP** — 技能実習生から世界で活躍する建築家までのロードマップ(費用・期間・要件つき)
-- **資格道場** — 建築大工技能士2・3級/2級建築施工管理技士/二級建築士/特定技能の本格対策(各20問)
+- **クイズバトル** — 6ステージのRPGバトル形式クイズ(基本ルール・玉掛け用具・合図・質量と重心・点検/廃棄基準・法規/講習対策)
+- **SLANG SHOWDOWN** — 地切り・キンク・介錯・ゴーヘイなど、職長の言葉を文脈から読み解く実戦クイズ
+- **RIGGING CALC** — 安全荷重(切断荷重÷安全係数)・吊り角度の張力・質量目測(体積×比重)の制限時間計算チャレンジ
+- **RIGGER'S WORKSHOP** — 玉掛け作業・荷降ろし・ワイヤー点検の手順並べ替えパズル(ドラッグ&タッチ対応)
+- **SIGNAL BATTLE** — 安全係数6・断線10%・径減少7%・張力係数1.41…重要数値の即答クイズ
+- **玉掛け用語辞典** — 現場用語をカテゴリ・検索で引ける
+- **キャリアMAP** — 特別教育→技能講習→小型移動式クレーン→クレーン運転士→職長・親方までのロードマップ(費用・期間・要件つき)
+- **資格道場** — 玉掛け技能講習・小型移動式クレーン・安全法規の本格対策
 
 ## ✨ 特徴
 
-- 日本語/英語の言語切り替え(クイズバトル・資格道場)
 - 漢字への自動ふりがな(ルビ)表示
 - 進捗の自動保存(ステージクリア・ベストスコア)
 - 依存ライブラリなしの単一HTMLファイル — ダウンロードしてブラウザで開くだけ
@@ -26,6 +25,10 @@ A gamified learning app for foreign carpentry trainees in Japan: site Japanese, 
 ## 🚀 使い方
 
 `index.html` をブラウザで開くだけ。ビルド・サーバー不要。
+
+## ⚠️ 免責
+
+本アプリは学習補助用です。実際の作業は最新の法令・事業場のルール・有資格者の指導に従ってください。
 
 ## 📄 License
 
