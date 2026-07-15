@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>TAMAKAKE'S FORGE — 玉掛けの現場日本語 × 技能RPG</title>
 <meta name="description" content="外国人技能実習生・特定技能者向けの玉掛け学習ゲーム。合図・用具・安全係数計算・点検基準・技能講習対策をRPG形式で学べる。">
 <meta property="og:title" content="TAMAKAKE'S FORGE">
@@ -56,7 +56,7 @@ body { display:flex; flex-direction:column; }
 .nav-tab:hover { color:var(--shiro); }
 
 /* ── PAGES ── */
-.page { display:none; padding:64px 0 90px; min-height:100vh; }
+.page { display:none; padding:64px 0 calc(140px + env(safe-area-inset-bottom)); min-height:100vh; }
 .page.active { display:block; }
 .container { max-width:640px; margin:0 auto; padding:0 16px; }
 
@@ -417,7 +417,7 @@ body { display:flex; flex-direction:column; }
 .result-screen p { color:var(--hai); font-size:14px; margin:8px 0 24px; }
 
 /* ── BOTTOM NAV ── */
-.bottom-nav { position:fixed; bottom:0; left:0; right:0; z-index:200; background:rgba(11,15,20,0.97); border-top:1px solid var(--tan3); display:flex; }
+.bottom-nav { position:fixed; bottom:0; left:0; right:0; z-index:200; background:rgba(11,15,20,0.97); border-top:1px solid var(--tan3); display:flex; padding-bottom:env(safe-area-inset-bottom); }
 .bottom-tab {
   flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
   padding:8px 4px; cursor:pointer; font-size:9px; font-family:var(--font-mono);
@@ -470,7 +470,7 @@ rt { font-size: 0.55em; color: var(--accent); letter-spacing: 0.05em; }
     <div class="mod-card c-gold" onclick="showPage('quiz')">
       <div class="mod-icon">⚔️</div>
       <div class="mod-title">クイズバトル</div>
-      <div class="mod-desc">6ステージ / 用具・合図・安全</div>
+      <div class="mod-desc">7ステージ / 用具・合図・安全</div>
     </div>
     <div class="mod-card c-red" onclick="showPage('slang')">
       <div class="mod-icon">💬</div>
