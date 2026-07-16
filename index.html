@@ -462,6 +462,11 @@ rt { font-size: 0.55em; color: var(--accent); letter-spacing: 0.05em; }
 .mock-choice.sel { border-color:var(--accent); background:rgba(240,180,41,0.12); }
 .mock-review-item { margin:8px 16px; background:var(--tan2); border-left:3px solid var(--aka); border-radius:4px; padding:10px 12px; font-size:12px; line-height:1.6; }
 .mock-review-item.ok { border-left-color:var(--midori); }
+
+/* ── MULTI-LANGUAGE ── */
+.lang-btn { background:none; border:1px solid var(--tan3); border-radius:4px; color:var(--accent); font-family:var(--font-mono); font-size:11px; letter-spacing:1px; padding:4px 10px; margin:10px 8px; cursor:pointer; white-space:nowrap; flex-shrink:0; }
+.lang-btn:hover { border-color:var(--accent); }
+.tr-sub { font-size:11px; color:#7FA8C9; margin-top:4px; line-height:1.5; font-style:normal; }
 </style>
 </head>
 <body>
@@ -469,6 +474,7 @@ rt { font-size: 0.55em; color: var(--accent); letter-spacing: 0.05em; }
 <!-- TOP NAV -->
 <nav class="nav">
   <div class="nav-logo">🪝 TAMAKAKE</div>
+  <button class="lang-btn" id="lang-btn" onclick="cycleLang()" title="言語切替 / Language">🌐 JA</button>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('home')">HOME</button>
     <button class="nav-tab" onclick="showPage('quiz')">QUIZ</button>
@@ -816,6 +822,48 @@ function markCleared(kind, id) {
   saveProgress({ [kind]: set });
 }
 function isCleared(kind, id) { return !!((loadProgress()[kind] || {})[id]); }
+
+// ════ MULTI-LANGUAGE (EN/VI/ID) ════
+const LANGS = ['ja','en','vi','id'];
+const LANG_LABELS = { ja:'🌐 JA', en:'🌐 EN', vi:'🌐 VI', id:'🌐 ID' };
+let LANG = 'ja';
+try { LANG = loadProgress().lang || 'ja'; } catch(e) {}
+function cycleLang() {
+  LANG = LANGS[(LANGS.indexOf(LANG)+1) % LANGS.length];
+  saveProgress({ lang: LANG });
+  applyLang();
+}
+// 対訳サブタイトルHTML (ja選択時 or 訳なしは空)
+function trSub(txt) { return (LANG==='ja' || !txt) ? '' : `<div class="tr-sub">${txt}</div>`; }
+// 問題オブジェクトの対訳取得: q.tr = {en:{q,choices,tip}, vi:..., id:...}
+function qTr(q) { return (LANG!=='ja' && q && q.tr && q.tr[LANG]) ? q.tr[LANG] : null; }
+// 固定UI文言の対訳テーブル (JA原文キー)
+const UI_TR = {
+  '7ステージ / 用具・合図・安全': { en:'7 stages / gear · signals · safety', vi:'7 màn / dụng cụ · tín hiệu · an toàn', id:'7 stage / alat · aba-aba · keselamatan' },
+  '職長の言葉を解読せよ': { en:"Decode the foreman's site slang", vi:'Giải mã tiếng lóng của tổ trưởng', id:'Pecahkan bahasa gaul mandor' },
+  '安全荷重・張力・質量計算': { en:'Safe load · tension · mass calculation', vi:'Tải trọng an toàn · lực căng · khối lượng', id:'Beban aman · tegangan · hitung massa' },
+  '作業手順パズルを並べろ': { en:'Arrange the work-procedure puzzle', vi:'Sắp xếp thứ tự các bước làm việc', id:'Susun urutan langkah kerja' },
+  '合図図解 + 数値・基準を即答': { en:'Signal diagrams + rapid-fire standards', vi:'Hình minh họa tín hiệu + trả lời nhanh', id:'Diagram aba-aba + jawab cepat standar' },
+  '現場言葉をカテゴリで引ける': { en:'Site-word dictionary by category', vi:'Tra từ công trường theo danh mục', id:'Kamus istilah lapangan per kategori' },
+  '玉掛け→クレーン運転士→親方へ': { en:'Rigger → crane operator → master', vi:'Móc cáp → lái cẩu → làm chủ', id:'Rigger → operator crane → mandor besar' },
+  '5資格×30問 + 本番模擬試験': { en:'5 licenses × 30Q + real mock exam', vi:'5 chứng chỉ × 30 câu + thi thử', id:'5 sertifikat × 30 soal + ujian simulasi' },
+  '玉掛けの数値・記号・基準を即答せよ': { en:'Answer rigging numbers & standards fast', vi:'Trả lời nhanh con số và tiêu chuẩn móc cáp', id:'Jawab cepat angka & standar rigging' },
+  '職長の言葉を文脈から読め — 玉掛けスラング実戦クイズ': { en:'Read the foreman from context — rigging slang quiz', vi:'Hiểu lời tổ trưởng qua ngữ cảnh — quiz tiếng lóng', id:'Pahami mandor dari konteks — kuis bahasa lapangan' },
+  '玉掛けの計算を制限時間内に解け': { en:'Solve rigging calculations against the clock', vi:'Giải các phép tính móc cáp trong thời gian giới hạn', id:'Selesaikan hitungan rigging melawan waktu' },
+  '玉掛け作業の手順を正しい順に並べろ': { en:'Put the rigging steps in the correct order', vi:'Sắp xếp các bước móc cáp theo đúng thứ tự', id:'Urutkan langkah rigging dengan benar' },
+  '玉掛けから揚重のプロへ — 4つのクラスを制覇せよ': { en:'From rigger to lifting pro — conquer 4 classes', vi:'Từ móc cáp đến chuyên gia nâng hạ — chinh phục 4 cấp', id:'Dari rigger ke ahli angkat — taklukkan 4 kelas' },
+  '玉掛け・小型移動式(ユニック)・床上操作式・クレーンとデリック・安全法規 — 各30問の本格対策': { en:'Slinging · mini mobile crane · floor-operated crane · crane & derrick · safety law — 30Q each', vi:'Móc cáp · cẩu di động nhỏ · cẩu điều khiển sàn · cẩu & derrick · luật an toàn — mỗi mục 30 câu', id:'Rigging · crane mobil kecil · crane lantai · crane & derrick · hukum keselamatan — 30 soal tiap topik' },
+};
+function applyLang() {
+  const btn = document.getElementById('lang-btn');
+  if (btn) btn.textContent = LANG_LABELS[LANG];
+  document.querySelectorAll('.mod-desc, .game-banner p').forEach(el => {
+    if (!el.dataset.ja) el.dataset.ja = el.textContent.trim();
+    const tr = UI_TR[el.dataset.ja];
+    el.innerHTML = el.dataset.ja + trSub(tr && tr[LANG]);
+  });
+  if (typeof initSigGuide === 'function') initSigGuide();
+}
 
 // ════ PAGE NAVIGATION ════
 const pages = ['home','quiz','slang','calc','workshop','signal','dict','career','shikaku'];
@@ -1327,7 +1375,8 @@ function renderBattleQuestion() {
   btAnswered = false;
   document.getElementById('b-stage-badge').textContent = `Q${btIndex+1}/${btQuestions.length}`;
   document.getElementById('b-enemy-hp').style.width = ((btQuestions.length-btIndex)/btQuestions.length*100)+'%';
-  document.getElementById('b-q-text').innerHTML = addRuby(q.q);
+  const _tr = qTr(q);
+  document.getElementById('b-q-text').innerHTML = addRuby(q.q) + trSub(_tr && _tr.q);
   document.getElementById('b-question-win').style.display='block';
 
   const cmdWin = document.getElementById('b-cmd-win');
@@ -1337,8 +1386,8 @@ function renderBattleQuestion() {
   idx.forEach((origIdx, dispIdx) => {
     const btn = document.createElement('button');
     btn.className='battle-cmd';
-    btn.innerHTML=`<span class="cmd-letter">${['A','B','C','D'][dispIdx]}</span>${addRuby(q.choices[origIdx])}`;
-    btn.onclick=()=>selectBattleAnswer(dispIdx, newCorrect, q.tip);
+    btn.innerHTML=`<span class="cmd-letter">${['A','B','C','D'][dispIdx]}</span><span>${addRuby(q.choices[origIdx])}${trSub(_tr && _tr.choices && _tr.choices[origIdx])}</span>`;
+    btn.onclick=()=>selectBattleAnswer(dispIdx, newCorrect, q);
     cmdWin.appendChild(btn);
   });
   document.getElementById('b-tip-win').classList.remove('show');
@@ -1346,7 +1395,8 @@ function renderBattleQuestion() {
   document.getElementById('b-msg').textContent='コマンドを選べ！';
 }
 
-function selectBattleAnswer(i, correctIdx, tip) {
+function selectBattleAnswer(i, correctIdx, q) {
+  const _t = qTr(q); const tip = q.tip;
   if (btAnswered) return;
   btAnswered = true;
   const btns = document.querySelectorAll('#b-cmd-win .battle-cmd');
@@ -1375,13 +1425,13 @@ function selectBattleAnswer(i, correctIdx, tip) {
     setTimeout(()=>miss.className='miss-popup', 900);
     document.getElementById('b-msg').textContent='❌ 不正解！ダメージを受けた！';
     if (btHP<=0) {
-      document.getElementById('b-tip-text').innerHTML=addRuby(tip);
+      document.getElementById('b-tip-text').innerHTML=addRuby(tip) + trSub(_t && _t.tip);
       document.getElementById('b-tip-win').classList.add('show');
       setTimeout(()=>showBattleResult(false), 1200);
       return;
     }
   }
-  document.getElementById('b-tip-text').innerHTML=addRuby(tip);
+  document.getElementById('b-tip-text').innerHTML=addRuby(tip) + trSub(_t && _t.tip);
   document.getElementById('b-tip-win').classList.add('show');
   const nextBtn = document.getElementById('b-next-btn');
   nextBtn.classList.add('show');
@@ -1431,6 +1481,43 @@ function backToBattleSelect() {
   document.getElementById('quiz-result').style.display='none';
   if (btMeta.kind==='shikaku') showPage('shikaku');
 }
+
+
+// ════ SHIKAKU 対訳 (EN/VI/ID) ════
+const SHIKAKU_TR = {};
+SHIKAKU_TR.tamakake = [
+{en:{q:"Correct safety factor for slinging wire rope?",choices:["4 or more","6 or more","8 or more","10 or more"],tip:"Wire rope: 6+. Hooks/shackles: 5+. Chains: 5 (4 with conditions)."},vi:{q:"Hệ số an toàn đúng của cáp thép móc hàng?",choices:["Từ 4 trở lên","Từ 6 trở lên","Từ 8 trở lên","Từ 10 trở lên"],tip:"Cáp thép: từ 6. Móc/ma ní: từ 5. Xích: 5 (có điều kiện là 4)."},id:{q:"Faktor keamanan yang benar untuk wire rope rigging?",choices:["4 ke atas","6 ke atas","8 ke atas","10 ke atas"],tip:"Wire rope: min. 6. Hook/segel: min. 5. Rantai: 5 (bersyarat 4)."}},
+{en:{q:"Which is NOT a discard criterion for wire rope?",choices:["10%+ broken wires in one lay","Diameter reduced over 7% of nominal","Kinked rope","Oil on the surface"],tip:"Oil protects the rope (rust/wear prevention) — it is not a defect."},vi:{q:"Điều nào KHÔNG phải tiêu chuẩn loại bỏ cáp thép?",choices:["Đứt trên 10% sợi trong một bước bện","Đường kính giảm quá 7%","Cáp bị xoắn gập (kink)","Bề mặt dính dầu"],tip:"Dầu bảo vệ cáp (chống gỉ/mòn) — không phải khuyết tật."},id:{q:"Mana yang BUKAN kriteria pembuangan wire rope?",choices:["10%+ kawat putus dalam satu pilinan","Diameter berkurang lebih 7%","Rope tertekuk (kink)","Ada oli di permukaan"],tip:"Oli melindungi rope (anti karat/aus) — bukan cacat."}},
+{en:{q:"Tension factor at a 60° sling angle?",choices:["About 1.16","About 1.41","About 2.0","About 3.0"],tip:"Memorize: 60°→1.16, 90°→1.41, 120°→2.0."},vi:{q:"Hệ số lực căng khi góc treo 60°?",choices:["Khoảng 1,16","Khoảng 1,41","Khoảng 2,0","Khoảng 3,0"],tip:"Thuộc lòng: 60°→1,16, 90°→1,41, 120°→2,0."},id:{q:"Faktor tegangan pada sudut angkat 60°?",choices:["Sekitar 1,16","Sekitar 1,41","Sekitar 2,0","Sekitar 3,0"],tip:"Hafalkan: 60°→1,16, 90°→1,41, 120°→2,0."}},
+{en:{q:"3 t load, 2-leg sling, 90° angle. Tension per leg?",choices:["1.5 t","2.0 t","About 2.1 t","3.0 t"],tip:"(3÷2)×1.41 ≈ 2.12 t. Halve first, then multiply by the factor."},vi:{q:"Hàng 3 tấn, treo 2 dây, góc 90°. Lực căng mỗi dây?",choices:["1,5 t","2,0 t","Khoảng 2,1 t","3,0 t"],tip:"(3÷2)×1,41 ≈ 2,12 t. Chia đôi trước rồi nhân hệ số."},id:{q:"Beban 3 t, sling 2 kaki, sudut 90°. Tegangan per kaki?",choices:["1,5 t","2,0 t","Sekitar 2,1 t","3,0 t"],tip:"(3÷2)×1,41 ≈ 2,12 t. Bagi dua dulu, lalu kalikan faktor."}},
+{en:{q:"Specific gravity of steel?",choices:["2.7","7.85","11.4","1.0"],tip:"Steel 7.85 / aluminum 2.7 / lead 11.4 / water 1.0 / concrete 2.3."},vi:{q:"Tỷ trọng của thép?",choices:["2,7","7,85","11,4","1,0"],tip:"Thép 7,85 / nhôm 2,7 / chì 11,4 / nước 1,0 / bê tông 2,3."},id:{q:"Berat jenis baja?",choices:["2,7","7,85","11,4","1,0"],tip:"Baja 7,85 / aluminium 2,7 / timbal 11,4 / air 1,0 / beton 2,3."}},
+{en:{q:"Legal timing for inspecting slinging gear?",choices:["Before starting that day's work","Once a week","Once a month","Once a year"],tip:"Crane Safety Rules Art. 220: inspect before each day's work."},vi:{q:"Thời điểm kiểm tra dụng cụ móc hàng theo luật?",choices:["Trước khi bắt đầu công việc trong ngày","Mỗi tuần một lần","Mỗi tháng một lần","Mỗi năm một lần"],tip:"Điều 220 Quy tắc an toàn cần trục: kiểm tra trước khi làm việc mỗi ngày."},id:{q:"Waktu pemeriksaan alat rigging menurut hukum?",choices:["Sebelum mulai kerja hari itu","Seminggu sekali","Sebulan sekali","Setahun sekali"],tip:"Pasal 220: periksa sebelum kerja setiap hari."}},
+{en:{q:"Correct operation at lift-off (jigiri)?",choices:["Hoist 2 m at once","Drag the load while lifting","Lift slightly, pause, and check condition","Lift without a signal"],tip:"Lift slightly, stop once, check balance and slinging — the key accident-prevention step."},vi:{q:"Thao tác đúng khi nhấc hàng khỏi mặt đất (jigiri)?",choices:["Kéo lên 2 m một lần","Vừa kéo lê vừa nâng","Nâng nhẹ, dừng lại, kiểm tra tình trạng","Nâng không cần tín hiệu"],tip:"Nâng nhẹ, dừng một lần, kiểm tra cân bằng — bước chống tai nạn quan trọng nhất."},id:{q:"Operasi yang benar saat lift-off (jigiri)?",choices:["Angkat 2 m sekaligus","Angkat sambil menyeret beban","Angkat sedikit, berhenti, periksa kondisi","Angkat tanpa aba-aba"],tip:"Angkat sedikit, berhenti sekali, cek keseimbangan — langkah pencegah kecelakaan utama."}},
+{en:{q:"Who gives signals for crane operation?",choices:["All workers","A person designated by the employer","The operator","The oldest worker"],tip:"The employer designates one signaler (Crane Safety Rules Art. 25)."},vi:{q:"Ai là người ra tín hiệu cho cần trục?",choices:["Tất cả công nhân","Người do chủ sử dụng chỉ định","Người lái cẩu","Người lớn tuổi nhất"],tip:"Chủ sử dụng chỉ định một người ra tín hiệu (Điều 25)."},id:{q:"Siapa pemberi aba-aba operasi crane?",choices:["Semua pekerja","Orang yang ditunjuk pengusaha","Operator sendiri","Pekerja tertua"],tip:"Pengusaha menunjuk satu pemberi aba-aba (Pasal 25)."}},
+{en:{q:"Workers entering under a suspended load — correct rule?",choices:["OK with a watchman","OK with a helmet","OK within 5 minutes","Must not be allowed under"],tip:"Entry under suspended loads is prohibited (Art. 74-2)."},vi:{q:"Công nhân đi vào dưới hàng đang treo — quy định đúng?",choices:["Có người canh là được","Đội mũ bảo hộ là được","Trong 5 phút là được","Cấm không được vào"],tip:"Cấm đi vào dưới hàng treo (Điều 74-2)."},id:{q:"Pekerja masuk ke bawah beban tergantung — aturan yang benar?",choices:["Boleh jika ada pengawas","Boleh jika pakai helm","Boleh dalam 5 menit","Dilarang masuk"],tip:"Dilarang berada di bawah beban tergantung (Pasal 74-2)."}},
+{en:{q:"If you lose your skill-training completion certificate?",choices:["Get reissued by the training institution you attended","Issued by the Labor Standards Office","Issued by Hello Work","Must retake the course"],tip:"Apply for reissue at the registered institution where you trained."},vi:{q:"Nếu mất chứng chỉ hoàn thành khóa kỹ năng?",choices:["Xin cấp lại tại cơ sở đào tạo đã học","Sở giám sát lao động cấp","Hello Work cấp","Phải học lại"],tip:"Xin cấp lại tại cơ sở đào tạo đã đăng ký."},id:{q:"Jika sertifikat pelatihan keterampilan hilang?",choices:["Minta terbit ulang di lembaga pelatihan tempat belajar","Diterbitkan kantor pengawas kerja","Diterbitkan Hello Work","Harus ikut kursus lagi"],tip:"Ajukan penerbitan ulang di lembaga terdaftar tempat pelatihan."}},
+{en:{q:"0.5 t load, crane capacity 2.8 t. Required slinging qualification?",choices:["Special training is enough (load under 1 t)","Skill-training completion needed (crane capacity 1 t or more)","No qualification needed","A driver's license is enough"],tip:"Qualification depends on the CRANE's rated capacity, not the load weight — classic trap!"},vi:{q:"Hàng 0,5 t, cẩu sức nâng 2,8 t. Cần chứng chỉ móc hàng nào?",choices:["Đào tạo đặc biệt là đủ (hàng dưới 1 t)","Cần hoàn thành khóa kỹ năng (cẩu từ 1 t trở lên)","Không cần chứng chỉ","Có bằng lái là đủ"],tip:"Chứng chỉ phụ thuộc SỨC NÂNG CẦN CẨU, không phải khối lượng hàng — bẫy kinh điển!"},id:{q:"Beban 0,5 t, kapasitas crane 2,8 t. Kualifikasi rigging yang perlu?",choices:["Cukup pelatihan khusus (beban di bawah 1 t)","Perlu lulus pelatihan keterampilan (kapasitas crane 1 t ke atas)","Tak perlu kualifikasi","Cukup SIM"],tip:"Kualifikasi tergantung KAPASITAS CRANE, bukan berat beban — jebakan klasik!"}},
+{en:{q:"Recommended discard rate for broken wires at the eye (one lay)?",choices:["5%+ of wires (excluding filler)","20%+","50%+","Broken wires don't matter"],tip:"Stress concentrates at the eye: stricter 5% vs 10% for the body."},vi:{q:"Tỷ lệ đứt sợi khuyến nghị loại bỏ tại phần mắt cáp?",choices:["Từ 5% số sợi (trừ sợi đệm)","Từ 20%","Từ 50%","Không quan trọng"],tip:"Ứng suất tập trung ở mắt cáp: 5% nghiêm hơn 10% của thân cáp."},id:{q:"Tingkat kawat putus untuk buang di bagian mata (eye)?",choices:["5%+ kawat (kecuali filler)","20%+","50%+","Kawat putus tak masalah"],tip:"Tegangan terpusat di mata: 5% lebih ketat daripada 10% di badan."}},
+{en:{q:"Which is NOT a chain sling inspection item?",choices:["Elongation","Wear","Cracks, deformation, twist","Paint gloss"],tip:"Inspect: elongation, wear, cracks/deformation/twist, welds — not color."},vi:{q:"Điều nào KHÔNG phải hạng mục kiểm tra xích treo?",choices:["Độ giãn dài","Độ mòn","Nứt, biến dạng, xoắn","Màu sơn bóng"],tip:"Kiểm tra: giãn, mòn, nứt/biến dạng/xoắn, mối hàn — không phải màu."},id:{q:"Mana yang BUKAN item pemeriksaan rantai sling?",choices:["Perpanjangan","Keausan","Retak, deformasi, puntiran","Kilap cat"],tip:"Periksa: pemanjangan, aus, retak/deformasi/puntir, las — bukan warna."}},
+{en:{q:"Deep choker hitch: tension on the wire counts as how many times normal?",choices:["Unchanged","1.2×","2–3×","10×"],tip:"Deep choking puts 2–3× tension at the choke point — use a thicker wire."},vi:{q:"Treo thắt sâu (choker): lực căng lên cáp tính bằng mấy lần bình thường?",choices:["Không đổi","1,2 lần","2–3 lần","10 lần"],tip:"Thắt sâu tạo lực căng 2–3 lần tại điểm thắt — chọn cáp to hơn."},id:{q:"Choker dalam: tegangan pada wire dihitung berapa kali normal?",choices:["Tidak berubah","1,2×","2–3×","10×"],tip:"Choker dalam memberi tegangan 2–3× di titik jerat — pakai wire lebih tebal."}},
+{en:{q:"A wrap hitch (adamaki) is especially effective for?",choices:["Small boxes","Long items like pipes and steel","Liquids","Powder"],tip:"One extra wrap prevents slipping — vital for long slippery loads."},vi:{q:"Kiểu quấn thêm vòng (adamaki) đặc biệt hiệu quả với?",choices:["Thùng nhỏ","Hàng dài như ống, thép hình","Chất lỏng","Bột"],tip:"Quấn thêm một vòng chống trượt — quan trọng với hàng dài dễ trượt."},id:{q:"Lilitan ekstra (adamaki) paling efektif untuk?",choices:["Kotak kecil","Barang panjang seperti pipa & baja","Cairan","Serbuk"],tip:"Satu lilitan ekstra mencegah slip — penting untuk barang panjang licin."}},
+{en:{q:"Max sling angle guideline for wrap-and-choke hitch?",choices:["Within 90°","Within 120°","Up to 180°","No limit"],tip:"Keep within 90° — wider angles overload the choke point."},vi:{q:"Góc treo tối đa cho kiểu quấn + thắt?",choices:["Trong 90°","Trong 120°","Đến 180°","Không giới hạn"],tip:"Giữ trong 90° — góc rộng làm quá tải điểm thắt."},id:{q:"Batas sudut angkat untuk lilit + choker?",choices:["Dalam 90°","Dalam 120°","Sampai 180°","Tanpa batas"],tip:"Jaga dalam 90° — sudut lebar membebani titik jerat."}},
+{en:{q:"Purpose of oiling wire rope?",choices:["Better appearance","Make loads slide off easier","Rust prevention and reducing wear between wires","Add weight for stability"],tip:"Rope oil = anti-rust + lubrication between wires."},vi:{q:"Mục đích bôi dầu cáp thép?",choices:["Đẹp hơn","Cho hàng dễ trượt xuống","Chống gỉ và giảm mòn giữa các sợi","Nặng hơn cho ổn định"],tip:"Dầu cáp = chống gỉ + bôi trơn giữa các sợi."},id:{q:"Tujuan meminyaki wire rope?",choices:["Penampilan bagus","Agar beban mudah meluncur","Anti karat & kurangi aus antar kawat","Menambah berat"],tip:"Oli rope = anti karat + pelumas antar kawat."}},
+{en:{q:"What does '6×24' on a wire rope mean?",choices:["6 mm × 24 mm","6 strands × 24 wires each","For 6 t × 24 m","Manufacturing date"],tip:"Construction: 6 strands, each of 24 wires."},vi:{q:"Ký hiệu '6×24' trên cáp thép nghĩa là?",choices:["6 mm × 24 mm","6 tao × mỗi tao 24 sợi","Dùng 6 t × 24 m","Ngày sản xuất"],tip:"Cấu tạo: 6 tao, mỗi tao 24 sợi."},id:{q:"Arti '6×24' pada wire rope?",choices:["6 mm × 24 mm","6 strand × 24 kawat tiap strand","Untuk 6 t × 24 m","Tanggal produksi"],tip:"Konstruksi: 6 strand, masing-masing 24 kawat."}},
+{en:{q:"Correct way to measure wire rope diameter?",choices:["Crown to crown with calipers, 3 directions, average","Valley to valley","By eye","Calculate from weight"],tip:"Measure over the strand crowns, 3 directions, take the average."},vi:{q:"Cách đo đường kính cáp thép đúng?",choices:["Đo đỉnh-đỉnh bằng thước kẹp, 3 hướng, lấy trung bình","Đo đáy-đáy","Nhìn bằng mắt","Tính từ khối lượng"],tip:"Đo qua đỉnh tao, 3 hướng, lấy trung bình."},id:{q:"Cara benar mengukur diameter wire rope?",choices:["Puncak ke puncak dengan jangka sorong, 3 arah, rata-rata","Lembah ke lembah","Dengan mata","Hitung dari berat"],tip:"Ukur lewat puncak strand, 3 arah, ambil rata-rata."}},
+{en:{q:"When wire touches a sharp load edge directly?",choices:["Tighten harder","Lift faster","Use thinner wire","Use pads to protect wire and load"],tip:"Corner pads protect both the wire and the load edge."},vi:{q:"Khi cáp chạm trực tiếp cạnh sắc của hàng?",choices:["Siết chặt hơn","Nâng nhanh hơn","Đổi cáp mỏng hơn","Dùng đệm lót bảo vệ cáp và hàng"],tip:"Đệm góc bảo vệ cả cáp lẫn cạnh hàng."},id:{q:"Saat wire kena langsung tepi tajam beban?",choices:["Kencangkan lebih kuat","Angkat lebih cepat","Ganti wire lebih tipis","Pakai bantalan pelindung wire dan beban"],tip:"Bantalan sudut melindungi wire dan tepi beban."}},
+{en:{q:"Why avoid single-leg hitch as a rule?",choices:["Wastes wire","Load spins easily; untwisting can unhook or damage the wire","Takes time","Looks bad"],tip:"Spinning + untwisting risk = detachment or wire damage."},vi:{q:"Vì sao tránh treo một dây theo nguyên tắc?",choices:["Tốn cáp","Hàng dễ xoay, cáp tự tháo xoắn gây tuột/hỏng","Mất thời gian","Xấu"],tip:"Xoay + tháo xoắn = nguy cơ tuột hoặc hỏng cáp."},id:{q:"Kenapa hindari angkat satu kaki sebagai aturan?",choices:["Boros wire","Beban mudah berputar; puntiran lepas bisa membuat lepas/rusak","Lama","Jelek"],tip:"Putaran + puntiran lepas = risiko lepas atau rusak."}},
+{en:{q:"Sling gear with missing/unreadable WLL marking?",choices:["Do not use it","Probably fine, use it","Use at half load","Use two of them"],tip:"Unknown WLL = do not use. No exceptions."},vi:{q:"Dụng cụ treo mất/không đọc được nhãn tải trọng (WLL)?",choices:["Không sử dụng","Chắc ổn, cứ dùng","Dùng nửa tải","Dùng hai cái"],tip:"Không rõ WLL = không dùng. Không ngoại lệ."},id:{q:"Alat sling dengan tanda WLL hilang/tak terbaca?",choices:["Jangan dipakai","Mungkin aman, pakai saja","Pakai setengah beban","Pakai dua buah"],tip:"WLL tidak jelas = jangan pakai. Tanpa pengecualian."}},
+{en:{q:"Care when hooking multiple eyes on one hook?",choices:["Any way is fine","Thicker wires outside","Hook eyes in order matching hook direction, no overlap","Bunch on one side"],tip:"Order and orientation prevent overlap and slipping out."},vi:{q:"Lưu ý khi móc nhiều mắt cáp vào một móc?",choices:["Móc sao cũng được","Cáp to ra ngoài","Móc theo thứ tự hợp hướng móc, không chồng lên nhau","Dồn một bên"],tip:"Đúng thứ tự và hướng tránh chồng chéo, tuột mắt cáp."},id:{q:"Perhatian saat mengait beberapa eye di satu hook?",choices:["Bebas saja","Wire tebal di luar","Kaitkan berurutan sesuai arah hook, tanpa tumpang tindih","Kumpulkan satu sisi"],tip:"Urutan dan arah benar mencegah tumpang tindih dan lepas."}},
+{en:{q:"Weakness of a basket/half hitch (hangake)?",choices:["Double strength","No grip on the load — slips easily","Takes time","Damages wire"],tip:"No bite on the load means it can slip — beware."},vi:{q:"Điểm yếu của kiểu móc nửa vòng (hangake)?",choices:["Khỏe gấp đôi","Không bám hàng — dễ trượt","Mất thời gian","Hỏng cáp"],tip:"Không bám vào hàng nên dễ trượt — cẩn thận."},id:{q:"Kelemahan basket/half hitch (hangake)?",choices:["Kekuatan dobel","Tidak mencengkeram beban — mudah slip","Lama","Merusak wire"],tip:"Tidak menggigit beban sehingga bisa slip — hati-hati."}},
+{en:{q:"Biggest caution when using a mokko (net sling)?",choices:["Small items sticking out / spilling and falling","Net color","Too-heavy loads","Cannot use in rain"],tip:"Falling small items are the top mokko hazard."},vi:{q:"Lưu ý lớn nhất khi dùng lưới treo (mokko)?",choices:["Đồ nhỏ lòi ra / rơi vãi","Màu lưới","Hàng quá nặng","Không dùng khi mưa"],tip:"Đồ nhỏ rơi là nguy hiểm số một của mokko."},id:{q:"Perhatian terbesar saat pakai jaring angkat (mokko)?",choices:["Barang kecil menonjol / tumpah jatuh","Warna jaring","Beban terlalu berat","Tak bisa saat hujan"],tip:"Barang kecil jatuh adalah bahaya utama mokko."}},
+{en:{q:"What to check when using a plate clamp (hacker)?",choices:["Color","Country of origin","Weight only","Load direction, plate-thickness fit, firm bite"],tip:"Direction, thickness range, and bite — all three."},vi:{q:"Kiểm tra gì khi dùng kẹp tôn (clamp)?",choices:["Màu","Nước sản xuất","Chỉ khối lượng","Hướng tải, độ dày tấm phù hợp, độ cắn chắc"],tip:"Hướng, phạm vi độ dày, độ cắn — cả ba."},id:{q:"Apa yang dicek saat pakai plate clamp?",choices:["Warna","Negara asal","Berat saja","Arah beban, kecocokan tebal pelat, gigitan kuat"],tip:"Arah, rentang tebal, gigitan — ketiganya."}},
+{en:{q:"What must you NOT do with an eyebolt?",choices:["Lift vertically","Pull sideways (angled lift)","Screw in fully","Seat the flange flush"],tip:"Side pulls drastically weaken eyebolts — vertical only."},vi:{q:"Điều KHÔNG được làm với bu lông mắt (eyebolt)?",choices:["Nâng thẳng đứng","Kéo ngang (nâng xiên)","Vặn hết ren","Cho mặt đế áp sát"],tip:"Kéo ngang làm bu lông mắt yếu đi nhiều — chỉ nâng thẳng đứng."},id:{q:"Apa yang TIDAK boleh dilakukan dengan eyebolt?",choices:["Angkat vertikal","Tarik menyamping (angkat miring)","Sekrup sampai penuh","Dudukan rapat"],tip:"Tarikan samping sangat melemahkan eyebolt — hanya vertikal."}},
+{en:{q:"Correct storage of slinging gear?",choices:["On the ground","Left outdoors","On racks, away from sunlight, moisture, chemicals","Left on the load"],tip:"Sun, moisture, and chemicals degrade gear — store organized on racks."},vi:{q:"Cách bảo quản dụng cụ móc hàng đúng?",choices:["Để trên đất","Bỏ ngoài trời","Trên giá, tránh nắng, ẩm, hóa chất","Để nguyên trên hàng"],tip:"Nắng, ẩm, hóa chất làm hỏng dụng cụ — cất gọn trên giá."},id:{q:"Penyimpanan alat rigging yang benar?",choices:["Di tanah","Di luar ruangan","Di rak, jauh dari matahari, lembap, kimia","Dibiarkan di beban"],tip:"Matahari, lembap, kimia merusak alat — simpan rapi di rak."}},
+{en:{q:"Danger of lifting a load with a high center of gravity?",choices:["Easily loses balance — tipping / load collapse","Becomes lighter","Wire stretches","Noisy"],tip:"High CG loads tip and collapse easily — extra care with balance."},vi:{q:"Nguy hiểm khi treo hàng có trọng tâm cao?",choices:["Dễ mất cân bằng — lật / sập hàng","Nhẹ đi","Cáp giãn","Ồn"],tip:"Hàng trọng tâm cao dễ lật, sập — chú ý cân bằng."},id:{q:"Bahaya mengangkat beban dengan titik berat tinggi?",choices:["Mudah hilang keseimbangan — terguling / runtuh","Jadi ringan","Wire memanjang","Berisik"],tip:"Titik berat tinggi mudah terguling — hati-hati keseimbangan."}},
+{en:{q:"Tandem lifting with two cranes?",choices:["Freely allowed","Avoid in principle; if unavoidable, take special measures like direct supervision","One signaler is enough","Night only"],tip:"Tandem lifts need a supervisor's direct command and special measures."},vi:{q:"Nâng đôi bằng hai cần trục?",choices:["Tự do làm","Về nguyên tắc tránh; bất khả kháng thì có biện pháp đặc biệt như chỉ huy trực tiếp","Một người ra hiệu là đủ","Chỉ ban đêm"],tip:"Nâng đôi cần chỉ huy trực tiếp và biện pháp đặc biệt."},id:{q:"Angkat tandem dengan dua crane?",choices:["Bebas dilakukan","Pada prinsipnya hindari; jika terpaksa, ambil langkah khusus seperti komando langsung","Satu pemberi aba-aba cukup","Malam saja"],tip:"Angkat tandem perlu komando langsung pengawas dan langkah khusus."}},
+];
+SHIKAKU_EXAMS.forEach(e => { const t = SHIKAKU_TR[e.id]; if (t) e.questions.forEach((q,i) => { if (t[i]) q.tr = t[i]; }); });
 
 // ════ STAGE / SHIKAKU LISTS ════
 function initStages() {
@@ -1864,7 +1951,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
   initDict();
   initCareer();
   initShikaku();
-  initSigGuide();
+  applyLang();
   mockShowBest();
 });
 
@@ -1878,6 +1965,16 @@ function sigFigure(armSvg) {
     ${armSvg}
   </svg>`;
 }
+const SIG_TR = {
+  '呼出し': { en:['Call','Raise one hand high'], vi:['Gọi','Giơ cao một tay'], id:['Panggilan','Angkat satu tangan tinggi-tinggi'] },
+  '巻き上げ': { en:['Hoist up','Raise arm and circle the hand'], vi:['Nâng móc','Giơ tay lên, quay tròn bàn tay'], id:['Naikkan hook','Angkat tangan, putar telapak melingkar'] },
+  '巻き下げ': { en:['Hoist down','Arm out to the side, wave palm downward'], vi:['Hạ móc','Dang tay ngang, úp lòng bàn tay vẫy xuống'], id:['Turunkan hook','Rentangkan tangan, lambaikan telapak ke bawah'] },
+  'ブーム上げ': { en:['Boom up','Fist with thumb pointing up, thrust upward'], vi:['Nâng cần','Nắm tay, ngón cái hướng lên trên'], id:['Boom naik','Kepalkan tangan, ibu jari ke atas'] },
+  'ブーム下げ': { en:['Boom down','Fist with thumb pointing down, thrust downward'], vi:['Hạ cần','Nắm tay, ngón cái hướng xuống dưới'], id:['Boom turun','Kepalkan tangan, ibu jari ke bawah'] },
+  '水平移動': { en:['Travel / traverse','Palm facing travel direction, wave that way'], vi:['Di chuyển ngang','Lòng bàn tay hướng theo chiều di chuyển, vẫy'], id:['Geser horizontal','Telapak menghadap arah tujuan, lambaikan'] },
+  '停止': { en:['Stop','Open palm raised high'], vi:['Dừng','Giơ cao lòng bàn tay mở'], id:['Berhenti','Telapak terbuka diangkat tinggi'] },
+  '急停止': { en:['Emergency stop','Both arms raised, wave vigorously side to side'], vi:['Dừng khẩn cấp','Hai tay giơ cao, vẫy mạnh sang hai bên'], id:['Berhenti darurat','Kedua tangan diangkat, lambaikan keras'] },
+};
 const SIG_GUIDE = [
   { name:'呼出し', how:'片手を高く上げる', arm:`<line x1="50" y1="40" x2="30" y2="60" stroke="#9AA5B1" stroke-width="3"/><g class="sig-anim-updown"><line x1="50" y1="40" x2="70" y2="8" stroke="#E8EAED" stroke-width="3"/><circle cx="70" cy="8" r="4" fill="#E8EAED"/></g>` },
   { name:'巻き上げ', how:'腕を上げ、手で輪を描くように回す', arm:`<line x1="50" y1="40" x2="30" y2="60" stroke="#9AA5B1" stroke-width="3"/><line x1="50" y1="40" x2="68" y2="18" stroke="#E8EAED" stroke-width="3"/><g class="sig-anim-circle" style="transform-origin:68px 12px;"><circle cx="68" cy="4" r="4" fill="#F0B429"/></g>` },
@@ -1891,7 +1988,10 @@ const SIG_GUIDE = [
 function initSigGuide() {
   const grid = document.getElementById('sig-grid');
   if (!grid) return;
-  grid.innerHTML = SIG_GUIDE.map(s => `<div class="sig-card">${sigFigure(s.arm)}<div class="sig-name">${s.name}</div><div class="sig-how">${s.how}</div></div>`).join('');
+  grid.innerHTML = SIG_GUIDE.map(s => {
+    const tr = (LANG!=='ja' && SIG_TR[s.name]) ? SIG_TR[s.name][LANG] : null;
+    return `<div class="sig-card">${sigFigure(s.arm)}<div class="sig-name">${s.name}${tr?` <span style="font-size:11px; color:#7FA8C9;">${tr[0]}</span>`:''}</div><div class="sig-how">${s.how}${tr?`<div class="tr-sub">${tr[1]}</div>`:''}</div></div>`;
+  }).join('');
 }
 
 // ════ MOCK EXAM (本番模擬試験) ════
@@ -1928,9 +2028,10 @@ function mockTickLabel() {
 function mockRender() {
   const q = mockQs[mockIdx];
   document.getElementById('mock-qnum').textContent = (mockIdx+1);
-  document.getElementById('mock-q').textContent = q.q;
+  const _t = qTr(q);
+  document.getElementById('mock-q').innerHTML = q.q + trSub(_t && _t.q);
   document.getElementById('mock-choices').innerHTML = q.choices.map((c,i) =>
-    `<button class="mock-choice${mockAns[mockIdx]===i?' sel':''}" onclick="mockPick(${i})">${'①②③④'[i]} ${c}</button>`).join('');
+    `<button class="mock-choice${mockAns[mockIdx]===i?' sel':''}" onclick="mockPick(${i})">${'①②③④'[i]} ${c}${trSub(_t && _t.choices && _t.choices[i])}</button>`).join('');
   document.getElementById('mock-next-btn').textContent = mockIdx === MOCK_N-1 ? '採点する 🎓' : '次の問題 ▶';
 }
 function mockPick(i) { mockAns[mockIdx] = i; mockRender(); }
@@ -1951,7 +2052,8 @@ function mockFinish() {
   document.getElementById('mock-review').innerHTML = mockQs.map((q,i) => {
     const ok = mockAns[i] === q.a;
     if (ok) return '';
-    return `<div class="mock-review-item"><b>Q${i+1}. ${q.q}</b><br>あなた: ${mockAns[i]===null?'未回答':q.choices[mockAns[i]]}<br>正解: <span style="color:#6DD47E;">${q.choices[q.a]}</span><br>💡 ${q.tip}</div>`;
+    const _t = qTr(q);
+    return `<div class="mock-review-item"><b>Q${i+1}. ${q.q}</b>${trSub(_t && _t.q)}<br>あなた: ${mockAns[i]===null?'未回答':q.choices[mockAns[i]]}<br>正解: <span style="color:#6DD47E;">${q.choices[q.a]}</span><br>💡 ${q.tip}${trSub(_t && _t.tip)}</div>`;
   }).join('') || '<div class="mock-review-item ok">全問正解！文句なしだ、相棒！🏆</div>';
   const p = loadProgress();
   const best = Math.max(p.mockBest || 0, Math.round(pct*100));
