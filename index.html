@@ -27,8 +27,9 @@
   --font-mono: 'Courier New', monospace;
 }
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-html, body { height:100%; background:var(--kuro); color:var(--shiro); font-family:var(--font-body); font-size:15px; }
-body { display:flex; flex-direction:column; }
+html { min-height:100%; }
+html, body { background:var(--kuro); color:var(--shiro); font-family:var(--font-body); font-size:15px; }
+body { min-height:100vh; overflow-y:auto; }
 
 /* ── NAV ── */
 .nav {
@@ -56,7 +57,7 @@ body { display:flex; flex-direction:column; }
 .nav-tab:hover { color:var(--shiro); }
 
 /* ── PAGES ── */
-.page { display:none; padding:64px 0 calc(140px + env(safe-area-inset-bottom)); min-height:100vh; }
+.page { display:none; padding:64px 0 calc(170px + env(safe-area-inset-bottom)); }
 .page.active { display:block; }
 .container { max-width:640px; margin:0 auto; padding:0 16px; }
 
@@ -432,6 +433,35 @@ rt { font-size: 0.55em; color: var(--accent); letter-spacing: 0.05em; }
 .battle-cmd rt { color: var(--hai); font-size: 0.5em; }
 .battle-cmd.correct rt { color: #6DD47E; }
 .battle-cmd.wrong rt { color: #E87065; }
+/* ── SIGNAL GUIDE (合図図解) ── */
+.sig-guide { padding:8px 16px 16px; }
+.sig-guide-title { font-family:var(--font-mono); font-size:11px; letter-spacing:2px; color:var(--accent); margin:8px 0; }
+.sig-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:10px; }
+.sig-card { background:var(--tan2); border:1px solid var(--tan3); border-radius:6px; padding:10px; text-align:center; }
+.sig-card svg { width:90px; height:110px; }
+.sig-name { font-size:13px; font-weight:700; margin-top:4px; color:var(--accent); }
+.sig-how { font-size:11px; color:var(--hai); margin-top:4px; line-height:1.5; }
+@keyframes sig-wave { 0%,100% { transform:rotate(-18deg); } 50% { transform:rotate(18deg); } }
+@keyframes sig-circle { 0% { transform:rotate(0deg); } 100% { transform:rotate(360deg); } }
+@keyframes sig-updown { 0%,100% { transform:translateY(0); } 50% { transform:translateY(8px); } }
+@keyframes sig-cross { 0%,100% { transform:rotate(-30deg); } 50% { transform:rotate(-60deg); } }
+.sig-anim-wave { animation:sig-wave 1.2s ease-in-out infinite; }
+.sig-anim-circle { animation:sig-circle 1.6s linear infinite; }
+.sig-anim-updown { animation:sig-updown 1.2s ease-in-out infinite; }
+.sig-anim-cross { animation:sig-cross 0.5s ease-in-out infinite; }
+
+/* ── MOCK EXAM (模擬試験) ── */
+.mock-start-card { margin:12px 16px; background:linear-gradient(135deg, rgba(240,180,41,0.12), var(--tan2)); border:1px solid var(--accent); border-radius:6px; padding:16px; }
+.mock-start-card h3 { color:var(--accent); font-family:var(--font-display); letter-spacing:1px; margin-bottom:6px; }
+.mock-start-card p { font-size:12px; color:var(--hai); line-height:1.6; margin-bottom:10px; }
+.mock-timer { position:sticky; top:52px; z-index:60; background:rgba(11,15,20,0.97); border-bottom:1px solid var(--tan3); padding:8px 16px; display:flex; justify-content:space-between; font-family:var(--font-mono); font-size:13px; }
+.mock-timer .t-warn { color:var(--aka); }
+.mock-q-card { margin:12px 16px; background:var(--tan2); border:1px solid var(--tan3); border-radius:6px; padding:14px; }
+.mock-q-text { font-size:14px; line-height:1.6; margin-bottom:12px; }
+.mock-choice { display:block; width:100%; text-align:left; background:var(--kuro); border:1px solid var(--tan3); border-radius:4px; color:var(--shiro); padding:12px; margin-bottom:8px; font-size:13px; cursor:pointer; }
+.mock-choice.sel { border-color:var(--accent); background:rgba(240,180,41,0.12); }
+.mock-review-item { margin:8px 16px; background:var(--tan2); border-left:3px solid var(--aka); border-radius:4px; padding:10px 12px; font-size:12px; line-height:1.6; }
+.mock-review-item.ok { border-left-color:var(--midori); }
 </style>
 </head>
 <body>
@@ -461,7 +491,7 @@ rt { font-size: 0.55em; color: var(--accent); letter-spacing: 0.05em; }
     <p class="hero-sub">// 玉掛けの現場日本語 × 技能 RPG</p>
     <div class="stat-row">
       <div class="stat-item"><div class="stat-num" id="stat-stages">6</div><div class="stat-label">STAGES</div></div>
-      <div class="stat-item"><div class="stat-num">5</div><div class="stat-label">GAMES</div></div>
+      <div class="stat-item"><div class="stat-num">6</div><div class="stat-label">GAMES</div></div>
       <div class="stat-item"><div class="stat-num" id="stat-slang">20+</div><div class="stat-label">用語</div></div>
       <div class="stat-item"><div class="stat-num" id="stat-shikaku">3</div><div class="stat-label">資格道場</div></div>
     </div>
@@ -490,7 +520,7 @@ rt { font-size: 0.55em; color: var(--accent); letter-spacing: 0.05em; }
     <div class="mod-card c-gold" onclick="showPage('signal')">
       <div class="mod-icon">🚩</div>
       <div class="mod-title">SIGNAL BATTLE</div>
-      <div class="mod-desc">数値・記号・基準を即答せよ</div>
+      <div class="mod-desc">合図図解 + 数値・基準を即答</div>
     </div>
     <div class="mod-card c-blue" onclick="showPage('dict')">
       <div class="mod-icon">📖</div>
@@ -505,7 +535,7 @@ rt { font-size: 0.55em; color: var(--accent); letter-spacing: 0.05em; }
     <div class="mod-card c-gold" onclick="showPage('shikaku')">
       <div class="mod-icon">🎓</div>
       <div class="mod-title">資格道場</div>
-      <div class="mod-desc">5資格×30問 / 講習・免許対策</div>
+      <div class="mod-desc">5資格×30問 + 本番模擬試験</div>
     </div>
   </div>
 </div>
@@ -685,6 +715,11 @@ rt { font-size: 0.55em; color: var(--accent); letter-spacing: 0.05em; }
     <h2>🚩 SIGNAL BATTLE</h2>
     <p>玉掛けの数値・記号・基準を即答せよ</p>
   </div>
+  <div class="sig-guide">
+    <div class="sig-guide-title">📖 クレーン合図 図解 — 動きで覚えろ</div>
+    <div class="sig-grid" id="sig-grid"></div>
+  </div>
+  <div class="sig-guide-title" style="padding:0 16px;">🚩 BATTLE — 数値・記号を即答</div>
   <div class="bb-score">スコア: <span id="bb-score">0</span> / 問題: <span id="bb-qnum">0</span>/8</div>
   <div class="bb-canvas-wrap">
     <canvas class="bb-canvas" id="bb-canvas" width="600" height="220"></canvas>
@@ -731,6 +766,29 @@ rt { font-size: 0.55em; color: var(--accent); letter-spacing: 0.05em; }
     <div class="hint-box">💡 各講習・試験の頻出ポイントを収録。バトル形式で挑戦しよう(クイズ画面に移動します)。</div>
   </div>
   <div id="shikaku-list" style="padding:12px 16px;"></div>
+  <div class="mock-start-card" id="mock-start">
+    <h3>📝 本番模擬試験</h3>
+    <p>全問題プールからランダム20問 / 制限時間15分 / 60%以上で合格。本番の学科試験(50問・60点合格・科目別40%足切り)の予行演習だ。</p>
+    <button class="btn-primary" onclick="mockStart()">模擬試験を開始する ▶</button>
+    <p id="mock-best" style="margin-top:8px;"></p>
+  </div>
+  <div id="mock-exam" style="display:none;">
+    <div class="mock-timer"><span>問 <span id="mock-qnum">1</span>/20</span><span id="mock-time">15:00</span></div>
+    <div class="mock-q-card">
+      <div class="mock-q-text" id="mock-q"></div>
+      <div id="mock-choices"></div>
+      <button class="btn-primary" id="mock-next-btn" onclick="mockNext()" style="width:100%; margin-top:6px;">次の問題 ▶</button>
+    </div>
+  </div>
+  <div id="mock-result" style="display:none;">
+    <div class="result-screen">
+      <div class="big-num" id="mock-score">0</div>
+      <p id="mock-verdict"></p>
+      <button class="btn-primary" onclick="mockStart()">もう一度挑戦</button>
+    </div>
+    <div class="sig-guide-title" style="padding:0 16px;">📖 復習 — 間違えた問題</div>
+    <div id="mock-review"></div>
+  </div>
 </div>
 
 <!-- BOTTOM NAV -->
@@ -1806,7 +1864,107 @@ window.addEventListener('DOMContentLoaded', ()=>{
   initDict();
   initCareer();
   initShikaku();
+  initSigGuide();
+  mockShowBest();
 });
+
+// ════ SIGNAL GUIDE (合図図解) ════
+function sigFigure(armSvg) {
+  return `<svg viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="50" cy="22" r="10" fill="none" stroke="#F0B429" stroke-width="3"/>
+    <line x1="50" y1="32" x2="50" y2="72" stroke="#F0B429" stroke-width="3"/>
+    <line x1="50" y1="72" x2="38" y2="105" stroke="#F0B429" stroke-width="3"/>
+    <line x1="50" y1="72" x2="62" y2="105" stroke="#F0B429" stroke-width="3"/>
+    ${armSvg}
+  </svg>`;
+}
+const SIG_GUIDE = [
+  { name:'呼出し', how:'片手を高く上げる', arm:`<line x1="50" y1="40" x2="30" y2="60" stroke="#9AA5B1" stroke-width="3"/><g class="sig-anim-updown"><line x1="50" y1="40" x2="70" y2="8" stroke="#E8EAED" stroke-width="3"/><circle cx="70" cy="8" r="4" fill="#E8EAED"/></g>` },
+  { name:'巻き上げ', how:'腕を上げ、手で輪を描くように回す', arm:`<line x1="50" y1="40" x2="30" y2="60" stroke="#9AA5B1" stroke-width="3"/><line x1="50" y1="40" x2="68" y2="18" stroke="#E8EAED" stroke-width="3"/><g class="sig-anim-circle" style="transform-origin:68px 12px;"><circle cx="68" cy="4" r="4" fill="#F0B429"/></g>` },
+  { name:'巻き下げ', how:'腕を横に伸ばし、手のひらを下にして下方に振る', arm:`<line x1="50" y1="40" x2="30" y2="60" stroke="#9AA5B1" stroke-width="3"/><g class="sig-anim-wave" style="transform-origin:50px 40px;"><line x1="50" y1="40" x2="85" y2="50" stroke="#E8EAED" stroke-width="3"/><circle cx="85" cy="50" r="4" fill="#E8EAED"/></g>` },
+  { name:'ブーム上げ', how:'親指を上に向け、他の指を握って突き上げる', arm:`<line x1="50" y1="40" x2="30" y2="60" stroke="#9AA5B1" stroke-width="3"/><g class="sig-anim-updown"><line x1="50" y1="40" x2="72" y2="24" stroke="#E8EAED" stroke-width="3"/><path d="M72 24 l0 -10" stroke="#F0B429" stroke-width="4"/></g>` },
+  { name:'ブーム下げ', how:'親指を下に向け、他の指を握って突き下げる', arm:`<line x1="50" y1="40" x2="30" y2="60" stroke="#9AA5B1" stroke-width="3"/><g class="sig-anim-updown"><line x1="50" y1="40" x2="72" y2="56" stroke="#E8EAED" stroke-width="3"/><path d="M72 56 l0 10" stroke="#F0B429" stroke-width="4"/></g>` },
+  { name:'水平移動', how:'手のひらを移動する方向に向けて振る', arm:`<line x1="50" y1="40" x2="30" y2="60" stroke="#9AA5B1" stroke-width="3"/><g class="sig-anim-wave" style="transform-origin:50px 40px;"><line x1="50" y1="40" x2="82" y2="36" stroke="#E8EAED" stroke-width="3"/><rect x="80" y="28" width="5" height="14" fill="#F0B429"/></g>` },
+  { name:'停止', how:'手のひらを高く上げて開く', arm:`<line x1="50" y1="40" x2="30" y2="60" stroke="#9AA5B1" stroke-width="3"/><line x1="50" y1="40" x2="72" y2="10" stroke="#E8EAED" stroke-width="3"/><circle cx="72" cy="8" r="6" fill="none" stroke="#D64541" stroke-width="3"/>` },
+  { name:'急停止', how:'両手を広げて高く上げ、激しく左右に振る', arm:`<g class="sig-anim-cross" style="transform-origin:50px 40px;"><line x1="50" y1="40" x2="20" y2="14" stroke="#D64541" stroke-width="3"/><circle cx="20" cy="14" r="4" fill="#D64541"/></g><g class="sig-anim-cross" style="transform-origin:50px 40px; animation-direction:reverse;"><line x1="50" y1="40" x2="80" y2="14" stroke="#D64541" stroke-width="3"/><circle cx="80" cy="14" r="4" fill="#D64541"/></g>` },
+];
+function initSigGuide() {
+  const grid = document.getElementById('sig-grid');
+  if (!grid) return;
+  grid.innerHTML = SIG_GUIDE.map(s => `<div class="sig-card">${sigFigure(s.arm)}<div class="sig-name">${s.name}</div><div class="sig-how">${s.how}</div></div>`).join('');
+}
+
+// ════ MOCK EXAM (本番模擬試験) ════
+const MOCK_N = 20, MOCK_SEC = 15*60, MOCK_PASS = 0.6;
+let mockQs = [], mockIdx = 0, mockAns = [], mockTimer = null, mockLeft = 0;
+function mockPool() {
+  const all = [];
+  SHIKAKU_EXAMS.forEach(e => e.questions.forEach(q => all.push(Object.assign({exam:e.name}, q))));
+  return all;
+}
+function mockStart() {
+  const pool = mockPool();
+  for (let i = pool.length-1; i>0; i--) { const j = Math.floor(Math.random()*(i+1)); [pool[i],pool[j]]=[pool[j],pool[i]]; }
+  mockQs = pool.slice(0, MOCK_N); mockIdx = 0; mockAns = new Array(MOCK_N).fill(null); mockLeft = MOCK_SEC;
+  document.getElementById('mock-start').style.display='none';
+  document.getElementById('mock-result').style.display='none';
+  document.getElementById('mock-exam').style.display='block';
+  clearInterval(mockTimer);
+  mockTimer = setInterval(mockTick, 1000);
+  mockRender(); mockTickLabel();
+  window.scrollTo(0,0);
+}
+function mockTick() {
+  mockLeft--;
+  if (mockLeft <= 0) { mockFinish(); return; }
+  mockTickLabel();
+}
+function mockTickLabel() {
+  const el = document.getElementById('mock-time');
+  const m = Math.floor(mockLeft/60), s = mockLeft%60;
+  el.textContent = m + ':' + String(s).padStart(2,'0');
+  el.className = mockLeft <= 120 ? 't-warn' : '';
+}
+function mockRender() {
+  const q = mockQs[mockIdx];
+  document.getElementById('mock-qnum').textContent = (mockIdx+1);
+  document.getElementById('mock-q').textContent = q.q;
+  document.getElementById('mock-choices').innerHTML = q.choices.map((c,i) =>
+    `<button class="mock-choice${mockAns[mockIdx]===i?' sel':''}" onclick="mockPick(${i})">${'①②③④'[i]} ${c}</button>`).join('');
+  document.getElementById('mock-next-btn').textContent = mockIdx === MOCK_N-1 ? '採点する 🎓' : '次の問題 ▶';
+}
+function mockPick(i) { mockAns[mockIdx] = i; mockRender(); }
+function mockNext() {
+  if (mockAns[mockIdx] === null) { alert('答えを選んでください'); return; }
+  if (mockIdx < MOCK_N-1) { mockIdx++; mockRender(); window.scrollTo(0,0); }
+  else mockFinish();
+}
+function mockFinish() {
+  clearInterval(mockTimer);
+  let correct = 0;
+  mockQs.forEach((q,i) => { if (mockAns[i] === q.a) correct++; });
+  const pct = correct / MOCK_N, pass = pct >= MOCK_PASS;
+  document.getElementById('mock-exam').style.display='none';
+  document.getElementById('mock-result').style.display='block';
+  document.getElementById('mock-score').textContent = Math.round(pct*100) + '点';
+  document.getElementById('mock-verdict').textContent = (pass ? '🎓 合格ライン突破！(' : '📚 あと一歩！(') + correct + '/' + MOCK_N + '問正解・合格は60点以上)';
+  document.getElementById('mock-review').innerHTML = mockQs.map((q,i) => {
+    const ok = mockAns[i] === q.a;
+    if (ok) return '';
+    return `<div class="mock-review-item"><b>Q${i+1}. ${q.q}</b><br>あなた: ${mockAns[i]===null?'未回答':q.choices[mockAns[i]]}<br>正解: <span style="color:#6DD47E;">${q.choices[q.a]}</span><br>💡 ${q.tip}</div>`;
+  }).join('') || '<div class="mock-review-item ok">全問正解！文句なしだ、相棒！🏆</div>';
+  const p = loadProgress();
+  const best = Math.max(p.mockBest || 0, Math.round(pct*100));
+  saveProgress({ mockBest: best });
+  mockShowBest();
+  document.getElementById('mock-start').style.display='block';
+  window.scrollTo(0,0);
+}
+function mockShowBest() {
+  const p = loadProgress();
+  const el = document.getElementById('mock-best');
+  if (el && p.mockBest) el.innerHTML = '🏅 自己ベスト: <b style="color:var(--accent);">' + p.mockBest + '点</b>';
+}
 </script>
 </body>
 </html>
